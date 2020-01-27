@@ -1,5 +1,9 @@
 const GoogleLocalResultScrapper = require('./GoogleLocalResultScrapper');
 
+/**
+ * This example searches for companies in Lekki, Lagos Nigeria.
+ */
+
 (async ()=>{
     const bot = new GoogleLocalResultScrapper();
 

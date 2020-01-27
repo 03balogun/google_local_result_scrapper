@@ -1,5 +1,7 @@
 # Google Local Result Scrapper
-This script scrapes google local search result for name, category, phone number location and website then save the record to a JSON file.
+This script scrapes google local search result for name, category, phone number, location and website then save the record to a JSON file.
+
+This can be particularly useful to get leads in a location, or as a data gathering tool.
 
 <img src="https://res.cloudinary.com/bwahab/image/upload/v1580064129/Screenshot_from_2020-01-26_19-37-15.png"/>
 
@@ -15,7 +17,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Clone the project
 - `git clone https://github.com/03balogun/google_local_result_scrapper.git`
 - Install the project dependencies by running `npm install`
-- Modify the search query in `example.js`
+- Modify the search query in `example.js` e.g. I.T Companies in Nigeria
 - In your command line run `node example.js` to begin scrapping the search result.
 
 ### GoogleLocalResultScrapper `class`
@@ -63,6 +65,11 @@ The `GoogleLocalResultScrapper` class handles all the operation of visiting goog
  
  # Example Usage
  
+ 
+ ### Example 1
+ 
+ The code snippet below searches for all companies in Lekki, Lagos Nigeria the save the record to a JSON file. 
+ 
 ```
 const GoogleLocalResultScrapper = require('./GoogleLocalResultScrapper');
 
@@ -87,6 +94,85 @@ const GoogleLocalResultScrapper = require('./GoogleLocalResultScrapper');
 
 })();
 ```
+### Example 2
+
+This example searches for all companies for each Local Government Area of Lagos, Nigeria.
+
+```
+const GoogleLocalResultScrapper = require('./GoogleLocalResultScrapper');
+
+/**
+ * This example searches for all companies in each local government in Nigeria.
+ */
+
+(const GoogleLocalResultScrapper = require('./GoogleLocalResultScrapper');
+ 
+ /**
+  * This example searches for all companies in each local government in Nigeria.
+  */
+ 
+ (async ()=>{
+     const bot = new GoogleLocalResultScrapper();
+ 
+     try {
+         await bot.initPuppeteer();
+ 
+         const localGovernments = [
+             "Ajeromi-Ifelodun",
+             "Alimosho",
+             "Amuwo-Odofin",
+             "Apapa",
+             "Badagry",
+             "Epe",
+             "Eti Osa",
+             "Ibeju-Lekki",
+             "Ifako-Ijaiye",
+             "Ikeja",
+             "Ikorodu",
+             "Kosofe",
+             "Lagos Island",
+             "Lagos Mainland",
+             "Mushin",
+             "Ojo",
+             "Oshodi-Isolo",
+             "Shomolu",
+             "Surulere"
+         ];
+ 
+         let records = {};
+ 
+         for (let i = 0; i < localGovernments.length; i++) {
+ 
+             const currentLga = localGovernments[i];
+ 
+             const query = `Companies in ${currentLga}`;
+             console.log(`Currently Searching::: ${query}`);
+ 
+             const data = await bot.visitGoogle(query, 1);
+ 
+             records[currentLga] = data;
+ 
+             console.log(records[currentLga]);
+ 
+             GoogleLocalResultScrapper.logDataStats(data)
+         }
+ 
+         await bot.saveAsJson({
+             records,
+             file_name: 'companies in lagos'
+         });
+ 
+     }catch (e) {
+         console.error(e)
+     }
+ 
+     await bot.closeBrowser();
+ 
+ })();
+
+
+```
+
 
 # Built With
 - [Node.js](https://nodejs.org/) - Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine. 

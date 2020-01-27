@@ -44,7 +44,7 @@ class GoogleLocalResultScrapper {
         try {
 
             const PAGE_URL = 'https://www.google.com';
-            const PAGE_OPTIONS = {timeout: 60000};
+            const PAGE_OPTIONS = {timeout: 100000};
 
             // Goto google.com
             await this.page.goto(PAGE_URL, PAGE_OPTIONS);
@@ -202,6 +202,10 @@ class GoogleLocalResultScrapper {
         })
     }
 
+    /**
+     * @description Get the statistics of the search result
+     * @param {Array} records
+     */
     static logDataStats(records) {
 
         // Get total records

@@ -30,7 +30,7 @@ The `GoogleLocalResultScrapper` class handles all the operation of visiting goog
     **Params** 
     - **headless** *Boolean* to run puppeteer in headless mode or not. The default value *true* setting this to false will open the chrome browser while performing the operation.
 
-- `visitGoogle` Async method which takes to parameters the search query and result page limit. This method is responsible for visiting google, scraping the result then returns an array of object e.g `[{name, category, phone_number, location, website}]`
+- `visitGoogle` Async method which takes two parameters the search query and result page limit. This method is responsible for visiting google, scraping the result then returns an array of object e.g `[{name, category, phone_number, location, website}]`
     
     **Params**
     - **searchQuery** *String* The Query to search for. e.g Schools in Lekki

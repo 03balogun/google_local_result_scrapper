@@ -10,7 +10,7 @@ const GoogleLocalResultScrapper = require('./GoogleLocalResultScrapper');
     try {
         await bot.initPuppeteer(false);
 
-        const query = 'Companies in Lekki';
+        const query = 'Computer teachers in Noida';
 
         const records = await bot.visitGoogle(query, 1);
 

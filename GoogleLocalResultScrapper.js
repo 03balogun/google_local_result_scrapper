@@ -289,7 +289,7 @@ class GoogleLocalResultScrapper {
     }
 
     async closeBrowser() {
-        //await this.browser.close();
+	await this.browser.close();
     }
 
 }

@@ -14,9 +14,9 @@ const GoogleLocalResultScrapper = require('./GoogleLocalResultScrapper');
 
         const records = await bot.visitGoogle(query, 1);
 
-        await bot.saveAsJson({records, file_name: query});
+	await bot.saveAsCSV({records, file_name: query});
 
-        GoogleLocalResultScrapper.logDataStats(records);
+        //GoogleLocalResultScrapper.logDataStats(records);
 
     }catch (e) {
         console.error(e)

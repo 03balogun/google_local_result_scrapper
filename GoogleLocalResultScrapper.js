@@ -1,5 +1,6 @@
-const $ = require('cheerio');
+const cheerio = require('cheerio');
 const fs = require('fs');
+const { parse } = require('json2csv');
 
 class GoogleLocalResultScrapper {
 
@@ -67,20 +68,21 @@ class GoogleLocalResultScrapper {
             // Wait for random amount of time :)
             await this.page.waitFor(1250 + Math.floor(Math.random() * 250));
 
-            // Click the view more button
-            await this.page.click(".cMjHbjVt9AZ__button");
+	    // Click the More places link
+	    const elements = await this.page.$x("//*[@id='main']/div[4]/div/div[10]/a")
+	    await elements[0].click() 
 
-            // wait till page finish loading
-            await this.page.waitForNavigation();
+	    // wait till page finish loading
+	    await this.page.waitForNavigation();
 
-            // wait for random amount of time
-            await this.page.waitFor(1250 + Math.floor(Math.random() * 250));
+	    // wait for random amount of time
+	    await this.page.waitFor(1250 + Math.floor(Math.random() * 250));
 
-            // Get the page content in raw html, so we can access it with the jquery guy $
-            const pageContent = await this.page.content();
+	    // Get the page content in raw html, so we can access it with the jquery guy $
+	    const pageContent = await this.page.content();
 
-            // proceed to the next method to read or data from the DOM and write it to a file
-            return await this._readData(pageContent, resultPageLimit);
+	    // proceed to the next method to read or data from the DOM and write it to a file
+	    return await this._readData(pageContent, resultPageLimit);
 
         } catch (error) {
             throw error;
@@ -94,69 +96,100 @@ class GoogleLocalResultScrapper {
      * @return {Promise<Array>} array of object e.g {name, category, phone_number, location, website}
      * @private
      */
-    async _readData(pageContent, resultPageLimit) {
 
+    async __readData(pageContent, resultPageLimit) {	
         // Parse the page content with cheerio
-        const allResults = $(pageContent).find('div[jsname="GZq3Ke"]');
+	const $ = cheerio.load(pageContent);	
+	const allResults = [];
+
+	$('div#main').find('div.X7NTVe').find('div > a.tHmfQe').each(function (index, element) {
+
+  		allResults.push("https://www.google.com"+$(element).attr('href'));
+	});
+
+	for (let i = 0; i < allResults.length; i++) {
+		const PAGE_URL = allResults[i];
+		const PAGE_OPTIONS = {timeout: 100000};
+
+		// goto the respected url
+		await this.page.goto(PAGE_URL, PAGE_OPTIONS);
+
+		// Wait for at least 1.5secs for the result modal to load
+		await this.page.waitFor(1500 + Math.floor(Math.random() * 250));
+
+
+
+	}
+    }
+
+    async _readData(pageContent, resultPageLimit) {
+	let $ = cheerio.load(pageContent);
+        // Parse the page content with cheerio
+	const allResults = [];
+
+	$('div#main').find('div.X7NTVe').find('div > a.tHmfQe').each(function (index, element) {
+
+  		allResults.push("https://www.google.com"+$(element).attr('href'));
+	});
 
         // Loop through all results, and format the data.
-        if (allResults.length) {
             for (let i = 0; i < allResults.length; i++) {
+		const PAGE_URL = allResults[i];
+		const PAGE_OPTIONS = {timeout: 100000};
 
-                // get the of the current result card.
-                const cid = $(allResults[i]).find('a.C8TUKc').attr('data-cid');
+		// goto the respected url
+		await this.page.goto(PAGE_URL, PAGE_OPTIONS);
 
-                // Click the current card to get the details
-                await this.page.click(`a[data-cid="${cid}"]`);
+		// Wait for at least 1.5secs for the result modal to load
+		await this.page.waitFor(1500 + Math.floor(Math.random() * 250));
 
-                // Wait for at least 1.5secs for the result modal to load
-                await this.page.waitFor(1500 + Math.floor(Math.random() * 250));
+		const updatedPagedContent = await this.page.content();
 
-                const updatedPagedContent = await this.page.content();
+		let $ = cheerio.load(updatedPagedContent);
 
-                const detailCard = $(updatedPagedContent).find('div[id*="akp_tsuid"]');
+		const name = $('div#main').find('div:nth-of-type(4) > div > div:nth-of-type(1) > span:nth-of-type(1) > h3 > div').text();
 
-                // Get the record name
-                const name = detailCard.find('div[data-attrid="title"]').text();
 
-                // Get the record category, could be high record driving record e.t.c
-                let category = detailCard.
-                find('.YhemCb:nth-child(2)').text() || detailCard.find('.YhemCb:nth-child(1)').text();
+		//// Get the record category, could be high record driving record e.t.c
+		//let category = detailCard.
+		//find('.YhemCb:nth-child(2)').text() || detailCard.find('.YhemCb:nth-child(1)').text();
 
-                // Get the record location
-                const location = $(detailCard.find('span.LrzXr')[0]).text();
+		// Get the location of the tutorial
+		const location = $('div#main').find('div:nth-of-type(4) > div > div:nth-of-type(4) >  div:nth-of-type(1) > div> span:nth-of-type(2) > span').text();
 
-                // Get the phone number
-                const phone_number = detailCard.find('span.LrzXr.zdqRlf.kno-fv').text();
 
-                // Get the records website
-                const website = detailCard.find('a.CL9Uqc.ab_button').attr('href') || '';
+		// Get the phone number
+		const phone_number = $('div#main').find('div:nth-of-type(4) > div > div:nth-of-type(4) >  div:nth-of-type(3) > div> span:nth-of-type(2) > span').text();
 
-                // Add the record to the array of records for the current local government area
-                const record = {name, category, phone_number, location, website};
-                this.records.push(record);
+		// Get the records website
+		const website = $('div#main').find('div:nth-of-type(4) > div > div:nth-of-type(3) > div> a:nth-of-type(2)').attr('href') || '';
+
+		//// Add the record to the array of records for the current local government area
+		const record = {name, phone_number, location, website};
+		this.records.push(record);
+
             }
-        }
 
-        // Get the next button
-        const nextButton = await this.page.$('a[id="pnnext"]');
 
-        // Check the if the button exists i.e we are not on the last page of the result
-        if (nextButton) {
+        //// Get the next button
+        //const nextButton = await this.page.$('a[id="pnnext"]');
 
-            // If the set result limit not equal result page continue scrapping
-            if (resultPageLimit && (resultPageLimit !== this.resultPage)) {
-                // If it does, click the next button
-                await nextButton.click();
+        //// Check the if the button exists i.e we are not on the last page of the result
+        //if (nextButton) {
 
-                // But for now wait for 2.5second for the next page result to load
-                await this.page.waitFor(1500);
-                this.resultPage += 1;
+            //// If the set result limit not equal result page continue scrapping
+            //if (resultPageLimit && (resultPageLimit !== this.resultPage)) {
+                //// If it does, click the next button
+                //await nextButton.click();
 
-                // Re-run the process all over again
-                await this._readData(await this.page.content(), resultPageLimit)
-            }
-        }
+                //// But for now wait for 2.5second for the next page result to load
+                //await this.page.waitFor(1500);
+                //this.resultPage += 1;
+
+                //// Re-run the process all over again
+                //await this._readData(await this.page.content(), resultPageLimit)
+            //}
+        //}
 
         return this.records;
     }
@@ -180,6 +213,34 @@ class GoogleLocalResultScrapper {
                     resolve(`${newFileName}.json`);
                 }
             });
+        })
+    }
+
+
+	
+    async saveAsCSV({records, file_name}) {
+        return new Promise((resolve, reject) => {
+            // convert file name to lowercase and replace all white space with underscore
+            const newFileName = file_name.toLowerCase()
+                .replace(/ /ig, "_");
+
+	    const fields = ['name', 'phone_number', 'location', 'website'];
+	    const opts = { fields };
+
+            try {
+              const csv = parse(records, opts);
+
+            fs.writeFile(`${newFileName}.csv`, csv, 'utf8', (error) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(`${newFileName}.json`);
+                }
+            });
+            } catch (err) {
+                    reject(error);
+            }
+
         })
     }
 
@@ -228,7 +289,7 @@ class GoogleLocalResultScrapper {
     }
 
     async closeBrowser() {
-        await this.browser.close();
+        //await this.browser.close();
     }
 
 }

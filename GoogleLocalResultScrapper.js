@@ -6,6 +6,7 @@ class GoogleLocalResultScrapper {
 
     constructor() {
         this.records = [];
+	this.allResults = [];
         this.resultPage = 1;
     }
 
@@ -97,43 +98,63 @@ class GoogleLocalResultScrapper {
      * @private
      */
 
-    async __readData(pageContent, resultPageLimit) {	
-        // Parse the page content with cheerio
-	const $ = cheerio.load(pageContent);	
-	const allResults = [];
-
-	$('div#main').find('div.X7NTVe').find('div > a.tHmfQe').each(function (index, element) {
-
-  		allResults.push("https://www.google.com"+$(element).attr('href'));
-	});
-
-	for (let i = 0; i < allResults.length; i++) {
-		const PAGE_URL = allResults[i];
-		const PAGE_OPTIONS = {timeout: 100000};
-
-		// goto the respected url
-		await this.page.goto(PAGE_URL, PAGE_OPTIONS);
-
-		// Wait for at least 1.5secs for the result modal to load
-		await this.page.waitFor(1500 + Math.floor(Math.random() * 250));
-
-
-
-	}
-    }
-
     async _readData(pageContent, resultPageLimit) {
 	let $ = cheerio.load(pageContent);
         // Parse the page content with cheerio
-	const allResults = [];
+
+	let allResults = this.allResults;
 
 	$('div#main').find('div.X7NTVe').find('div > a.tHmfQe').each(function (index, element) {
 
   		allResults.push("https://www.google.com"+$(element).attr('href'));
 	});
 
-        // Loop through all results, and format the data.
-            for (let i = 0; i < allResults.length; i++) {
+
+
+	let nextButton = null;
+
+	// Get the next button
+	if (this.resultPage == 1){
+		nextButton = await this.page.$x("//*[@id='main']/footer/div[1]/div/div/a");
+	} else {
+		nextButton = await this.page.$x("//*[@id='main']/footer/div[1]/div/div/a[2]");
+	}
+
+	// Check the if the button exists i.e we are not on the last page of the result
+	if (nextButton) {
+	    // If the set result limit not equal result page continue scrapping
+	    if (resultPageLimit && (resultPageLimit !== this.resultPage)) {
+		
+	    	// wait for random amount of time
+	    	await this.page.waitFor(1250 + Math.floor(Math.random() * 250));
+
+		// If it does, click the next button
+	        await nextButton[0].click();
+
+	    	// wait till page finish loading
+	    	await this.page.waitForNavigation();
+
+		this.resultPage += 1;
+
+	    	// wait for random amount of time
+	    	await this.page.waitFor(1250 + Math.floor(Math.random() * 250));
+
+	    	// Get the page content in raw html, so we can access it with the jquery guy $
+	    	const pageContent = await this.page.content();
+
+		// Re-run the process all over again
+		await this._readData(pageContent, resultPageLimit)
+	    }
+	}
+
+	console.log(this.allResults.length);
+        this._scrap_results(this.allResults);	
+	return this.records;
+    }
+
+    async _scrap_results(allResults){
+	 //Loop through all results, and format the data.
+	for (let i = 0; i < allResults.length; i++) {
 		const PAGE_URL = allResults[i];
 		const PAGE_OPTIONS = {timeout: 100000};
 
@@ -168,30 +189,7 @@ class GoogleLocalResultScrapper {
 		const record = {name, phone_number, location, website};
 		this.records.push(record);
 
-            }
-
-
-        //// Get the next button
-        //const nextButton = await this.page.$('a[id="pnnext"]');
-
-        //// Check the if the button exists i.e we are not on the last page of the result
-        //if (nextButton) {
-
-            //// If the set result limit not equal result page continue scrapping
-            //if (resultPageLimit && (resultPageLimit !== this.resultPage)) {
-                //// If it does, click the next button
-                //await nextButton.click();
-
-                //// But for now wait for 2.5second for the next page result to load
-                //await this.page.waitFor(1500);
-                //this.resultPage += 1;
-
-                //// Re-run the process all over again
-                //await this._readData(await this.page.content(), resultPageLimit)
-            //}
-        //}
-
-        return this.records;
+	    }
     }
 
     /**

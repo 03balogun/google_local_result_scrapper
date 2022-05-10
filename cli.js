@@ -1,4 +1,5 @@
 const GoogleLocalResultScrapper = require('./GoogleLocalResultScrapper');
+const args = require('minimist')(process.argv.slice(2));
 
 /**
  * This example searches for companies in Lekki, Lagos Nigeria.
@@ -10,9 +11,11 @@ const GoogleLocalResultScrapper = require('./GoogleLocalResultScrapper');
     try {
         await bot.initPuppeteer(false);
 
-        const query = 'Computer teachers in Noida';
+        const query = args.q;
+	
+	const pages = args.p;
 
-        const records = await bot.visitGoogle(query, 1);
+        const records = await bot.visitGoogle(query, pages);
 
 	await bot.saveAsCSV({records, file_name: query});
 

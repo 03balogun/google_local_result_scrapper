@@ -1,1 +1,3 @@
 google-services-api
+request
+selenium

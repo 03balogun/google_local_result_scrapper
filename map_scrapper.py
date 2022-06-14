@@ -1,8 +1,17 @@
+#!/usr/bin/env python3
+
 import json
 import csv
 import argparse
+import requests
 from outscraper import ApiClient
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+import time
+from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
+driver = webdriver.Firefox(executable_path='/Users/mridulshukla/Downloads/geckodriver')
+driver.get("https://web.whatsapp.com")
 API_KEY = 'Z29vZ2xlLW9hdXRoMnwxMTc0MDk1OTAxOTcxMjgxNjQ1ODN8NjJhMGFhMWJkMg'
 
 
@@ -26,11 +35,20 @@ def save_to_file(dict_json, file_name):
     header = ['name', 'full_address', 'phone', 'site', 'rating']
 
     data = []
-
+   
     for dict in dict_json:
-        data.append([dict['name'], dict['full_address'], dict['phone'], dict['site'], dict['rating']])
+        phone=dict['phone'].replace(" ","").replace("+","")
+        driver.get("https://web.whatsapp.com/send?phone=$"+ str(phone) + "&text&app_absent=0")
+        time.sleep(14)
+        
+        if len(driver.find_elements_by_xpath("/html/body/div[1]/div[1]/span[2]/div[1]/span/div[1]/div/div/div")) == 0: 
+             #print(response.status_code)
+             data.append([dict['name'], dict['full_address'], dict['phone'], dict['site'], dict['rating']])
+        else:
+            #print(response.status_code)
+            data.append([dict['name'], dict['full_address'], '',dict['site'], dict['rating']])     
 
-
+    
     with open(file_name, 'w', encoding='UTF8', newline='') as f:
         writer = csv.writer(f)
 

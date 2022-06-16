@@ -3,7 +3,6 @@
 import json
 import csv
 import argparse
-import requests
 from outscraper import ApiClient
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys

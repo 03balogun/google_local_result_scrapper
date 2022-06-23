@@ -7,9 +7,9 @@ from outscraper import ApiClient
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
-
-
-driver = webdriver.Chrome(executable_path='/Users/mridulshukla/Downloads/chromedriver')
+import chromedriver_autoinstaller
+chromedriver_autoinstaller.install()
+driver = webdriver.Chrome()
 driver.get("https://web.whatsapp.com")
 API_KEY = 'Z29vZ2xlLW9hdXRoMnwxMTc0MDk1OTAxOTcxMjgxNjQ1ODN8NjJhMGFhMWJkMg'
 
